@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Буклик</title>
+    <style>
+        body { background: #b8e1d9; font-family: Arial; text-align: center; padding: 30px; }
+        .box {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #fff9e6;
+            border-radius: 30px;
+            padding: 20px;
+            border: 4px solid #ffb27f;
+        }
+        .chat {
+            background: white;
+            border-radius: 20px;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            text-align: left;
+            border: 2px solid #ffcf9a;
+            margin: 20px 0;
+        }
+        .message { margin: 8px 0; }
+        input, button {
+            padding: 12px;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            border: 2px solid #ffcf9a;
+            margin: 5px;
+        }
+        button { background: #ffb27f; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2>✨ Буклик ✨</h2>
+    <div class="chat" id="chat"></div>
+    <input type="text" id="input" placeholder="Напиши...">
+    <button id="send">Отправить</button>
+    <button id="mic">🎤</button>
+</div>
+
+<script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const send = document.getElementById('send');
+    const mic = document.getElementById('mic');
+
+    let step = 0;
+    let name = '';
+
+    function add(sender, text) {
+        const msg = document.createElement('div');
+        msg.className = 'message';
+        msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        chat.appendChild(msg);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    add('Буклик', 'Привет! Как тебя зовут?');
+
+    send.onclick = () => {
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        add('Ты', text);
+
+        if (step === 0) {
+            name = text;
+            add('Буклик', `Привет, ${name}!`);
+            step = 1;
+        } else {
+            add('Буклик', 'Интересно! Расскажи ещё.');
+        }
+    };
+
+    if ('webkitSpeechRecognition' in window) {
+        const rec = new webkitSpeechRecognition();
+        rec.lang = 'ru-RU';
+        rec.onresult = (e) => {
+            input.value = e.results[0][0].transcript;
+            send.click();
+        };
+        mic.onclick = () => rec.start();
+    }
+</script>
+</body>
+</html>
