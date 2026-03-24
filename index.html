@@ -288,49 +288,52 @@
         }
 
         // ========== ГЕНЕРАЦИЯ КАРТИНОК С ОТЛАДКОЙ ==========
-        async function generatePicture(prompt) {
-            console.log('🔍 Генерация картинки по промту:', prompt);
-            
-            pictureBlock.style.display = 'block';
-            pictureImg.src = '';
-            const imgDiv = pictureBlock.querySelector('div');
-            if (imgDiv) imgDiv.innerText = '🎨 Волшебная картинка создаётся...';
+       async function generatePicture(prompt) {
+    console.log('🔍 Генерация картинки по промту:', prompt);
+    
+    pictureBlock.style.display = 'block';
+    pictureImg.src = '';
+    const imgDiv = pictureBlock.querySelector('div');
+    if (imgDiv) imgDiv.innerText = '🎨 Волшебная картинка создаётся...';
 
-            try {
-                const response = await fetch(API_URL + '/image', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ prompt: prompt })
-                });
-                
-                console.log('📡 Статус ответа:', response.status);
-                const responseText = await response.text();
-                console.log('📄 Текст ответа:', responseText);
-                
-                let data;
-                try {
-                    data = JSON.parse(responseText);
-                } catch (e) {
-                    console.error('❌ Ответ не JSON:', responseText);
-                    if (imgDiv) imgDiv.innerText = '😔 Сервер вернул ошибку, но ты молодец!';
-                    return;
-                }
-
-                if (data.image) {
-                    pictureImg.src = data.image;
-                    if (imgDiv) imgDiv.innerText = '✨ Вот картинка к твоей истории:';
-                    console.log('✅ Картинка получена от YandexART');
-                } else {
-                    console.error('❌ Ошибка от YandexART:', data);
-                    if (imgDiv) imgDiv.innerText = '😔 Картинка не загрузилась, но ты молодец!';
-                }
-            } catch (error) {
-                console.error('❌ Ошибка при запросе картинки:', error);
-                if (imgDiv) imgDiv.innerText = '😔 Картинка не загрузилась, но ты молодец!';
-            }
+    try {
+        const response = await fetch(API_URL + '/image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ prompt: prompt })
+        });
+        
+        console.log('📡 Статус ответа:', response.status);
+        
+        // Пробуем получить ответ как текст
+        const text = await response.text();
+        console.log('📄 Текст ответа:', text);
+        
+        // Пытаемся распарсить JSON
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error('❌ Ответ не JSON, показываем как есть');
+            if (imgDiv) imgDiv.innerText = '😔 Сервер вернул ошибку: ' + text.slice(0, 100);
+            return;
         }
+
+        if (data.image) {
+            pictureImg.src = data.image;
+            if (imgDiv) imgDiv.innerText = '✨ Вот картинка к твоей истории:';
+            console.log('✅ Картинка получена от YandexART');
+        } else {
+            console.error('❌ Ошибка от YandexART:', data);
+            if (imgDiv) imgDiv.innerText = '😔 Картинка не загрузилась, но ты молодец!';
+        }
+    } catch (error) {
+        console.error('❌ Ошибка при запросе картинки:', error);
+        if (imgDiv) imgDiv.innerText = '😔 Картинка не загрузилась, но ты молодец!';
+    }
+}
 
         // Основная логика
         sendBtn.onclick = async () => {
