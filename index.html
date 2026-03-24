@@ -296,43 +296,27 @@
     const imgDiv = pictureBlock.querySelector('div');
     if (imgDiv) imgDiv.innerText = '🎨 Волшебная картинка создаётся...';
 
-    try {
-        const response = await fetch(API_URL + '/image', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ prompt: prompt })
-        });
-        
-        console.log('📡 Статус ответа:', response.status);
-        
-        // Пробуем получить ответ как текст
-        const text = await response.text();
-        console.log('📄 Текст ответа:', text);
-        
-        // Пытаемся распарсить JSON
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (e) {
-            console.error('❌ Ответ не JSON, показываем как есть');
-            if (imgDiv) imgDiv.innerText = '😔 Сервер вернул ошибку: ' + text.slice(0, 100);
-            return;
-        }
-
-        if (data.image) {
-            pictureImg.src = data.image;
-            if (imgDiv) imgDiv.innerText = '✨ Вот картинка к твоей истории:';
-            console.log('✅ Картинка получена от YandexART');
-        } else {
-            console.error('❌ Ошибка от YandexART:', data);
-            if (imgDiv) imgDiv.innerText = '😔 Картинка не загрузилась, но ты молодец!';
-        }
-    } catch (error) {
-        console.error('❌ Ошибка при запросе картинки:', error);
+    // Обрезаем длинный промт (Pollinations не любит слишком длинные)
+    const shortPrompt = prompt.slice(0, 120);
+    const encodedPrompt = encodeURIComponent(shortPrompt);
+    
+    // Используем лучшую модель flux, убираем логотипы
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&nologo=true&model=flux`;
+    
+    console.log('🖼️ URL картинки:', imageUrl);
+    
+    const img = new Image();
+    img.onload = () => {
+        pictureImg.src = imageUrl;
+        if (imgDiv) imgDiv.innerText = '✨ Вот картинка к твоей истории:';
+        console.log('✅ Картинка загружена');
+    };
+    img.onerror = (err) => {
+        console.error('❌ Ошибка загрузки картинки:', err);
         if (imgDiv) imgDiv.innerText = '😔 Картинка не загрузилась, но ты молодец!';
-    }
+        pictureImg.src = '';
+    };
+    img.src = imageUrl;
 }
 
         // Основная логика
