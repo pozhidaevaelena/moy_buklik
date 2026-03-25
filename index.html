@@ -288,7 +288,7 @@
         }
 
         // ========== ГЕНЕРАЦИЯ КАРТИНОК С ОТЛАДКОЙ ==========
-       async function generatePicture(prompt) {
+      async function generatePicture(prompt) {
     console.log('🔍 Генерация картинки по промту:', prompt);
     
     pictureBlock.style.display = 'block';
@@ -296,11 +296,8 @@
     const imgDiv = pictureBlock.querySelector('div');
     if (imgDiv) imgDiv.innerText = '🎨 Волшебная картинка создаётся...';
 
-    // Обрезаем длинный промт (Pollinations не любит слишком длинные)
-    const shortPrompt = prompt.slice(0, 120);
-    const encodedPrompt = encodeURIComponent(shortPrompt);
-    
-    // Используем лучшую модель flux, убираем логотипы
+    // Формируем URL как в PollenPages
+    const encodedPrompt = encodeURIComponent(prompt);
     const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&nologo=true&model=flux`;
     
     console.log('🖼️ URL картинки:', imageUrl);
@@ -318,7 +315,6 @@
     };
     img.src = imageUrl;
 }
-
         // Основная логика
         sendBtn.onclick = async () => {
             const text = userInput.value.trim();
