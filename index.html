@@ -296,8 +296,11 @@
     const imgDiv = pictureBlock.querySelector('div');
     if (imgDiv) imgDiv.innerText = '🎨 Волшебная картинка создаётся...';
 
-    // Простой URL без лишних параметров
-    const encodedPrompt = encodeURIComponent(prompt);
+    // Обрезаем длинный промт (первые 100 символов)
+    const shortPrompt = prompt.slice(0, 100);
+    const encodedPrompt = encodeURIComponent(shortPrompt);
+    
+    // Правильный URL — без лишних параметров
     const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&nologo=true`;
     
     console.log('🖼️ URL картинки:', imageUrl);
