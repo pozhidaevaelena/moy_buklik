@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Буклик</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body {
+            background: linear-gradient(145deg, #7BC5AE 0%, #B8E1D9 50%, #E6C5A8 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .app {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 248, 235, 0.95);
+            border-radius: 50px;
+            padding: 25px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2rem;
+            color: #3F2B1C;
+            background: #FFF5E0;
+            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 50px;
+            margin-bottom: 20px;
+        }
+        .story-block {
+            background: #FFF9E6;
+            border-radius: 30px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 3px solid #FFB27F;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            text-align: left;
+            min-height: 150px;
+        }
+        .picture-block {
+            background: #FFD9C0;
+            border-radius: 30px;
+            padding: 15px;
+            margin: 15px 0;
+            display: none;
+        }
+        .picture-block img {
+            max-width: 100%;
+            border-radius: 20px;
+        }
+        .chat {
+            background: #FFF5E0;
+            border-radius: 30px;
+            padding: 15px;
+            height: 250px;
+            overflow-y: auto;
+            margin: 15px 0;
+            text-align: left;
+            border: 2px solid #FFCF9A;
+        }
+        .bot { background: #E8F0FE; padding: 8px 12px; border-radius: 18px; margin: 8px 0; }
+        .user { background: #FEE4C4; padding: 8px 12px; border-radius: 18px; margin: 8px 0; text-align: right; }
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 40px;
+            border: 2px solid #FFB27F;
+            outline: none;
+        }
+        button {
+            padding: 12px 20px;
+            border-radius: 40px;
+            border: none;
+            background: #FFB27F;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .suggestions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+            justify-content: center;
+        }
+        .suggestion-btn {
+            background: #FFF0D9;
+            border: 1px solid #FFB27F;
+            border-radius: 30px;
+            padding: 6px 15px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .suggestion-btn:hover { background: #FFB27F; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <h1>✨ Буклик ✨</h1>
+    <div class="story-block" id="storyBlock">📖 Здесь появится сказка...</div>
+    <div class="picture-block" id="pictureBlock">
+        <div>🎨 Рисую картинку...</div>
+        <img id="pictureImg" src="">
+    </div>
+    <div class="chat" id="chat"></div>
+    <div class="suggestions" id="suggestions"></div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Напиши ответ...">
+        <button id="sendBtn">📩</button>
+        <button id="micBtn">🎤</button>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://examples-beta-murex.vercel.app';
+    
+    let step = 0;
+    let childName = '';
+    let childGender = '';
+    let hero = '';
+    let place = '';
+    let friend = '';
+    let magicItem = '';
+    let storyText = '';
+    
+    const chatDiv = document.getElementById('chat');
+    const storyBlock = document.getElementById('storyBlock');
+    const pictureBlock = document.getElementById('pictureBlock');
+    const pictureImg = document.getElementById('pictureImg');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+    const suggestionsDiv = document.getElementById('suggestions');
+    
+    // Голос
+    function speak(text) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ru-RU';
+        utterance.rate = 0.9;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    }
+    
+    function addMessage(text, isUser = false) {
+        const msg = document.createElement('div');
+        msg.className = isUser ? 'user' : 'bot';
+        msg.textContent = text;
+        chatDiv.appendChild(msg);
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+        if (!isUser) speak(text);
+    }
+    
+    function showSuggestions(options) {
+        suggestionsDiv.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('span');
+            btn.className = 'suggestion-btn';
+            btn.textContent = opt;
+            btn.onclick = () => {
+                userInput.value = opt;
+                sendBtn.click();
+            };
+            suggestionsDiv.appendChild(btn);
+        });
+    }
+    
+    function clearSuggestions() {
+        suggestionsDiv.innerHTML = '';
+    }
+    
+    // Простой запрос к серверу
+    async function askBot(question) {
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: question,
+                    history: [],
+                    system: "Ты Буклик, добрый сказочник для детей 5-10 лет. Отвечай коротко и понятно. Не используй звёздочки."
+                })
+            });
+            const data = await response.json();
+            return data.reply;
+        } catch(e) {
+            console.log('Ошибка:', e);
+            return null;
+        }
+    }
+    
+    // Генерация картинки
+    async function makePicture(prompt) {
+        pictureBlock.style.display = 'block';
+        pictureImg.src = '';
+        const div = pictureBlock.querySelector('div');
+        div.textContent = '🎨 Рисую картинку...';
+        
+        try {
+            const encoded = encodeURIComponent(prompt.slice(0, 150));
+            const response = await fetch(`${API_URL}/generate-image?prompt=${encoded}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                pictureImg.src = URL.createObjectURL(blob);
+                div.textContent = '🖼️ Вот иллюстрация:';
+            }
+        } catch(e) {
+            div.textContent = '😔 Картинка не загрузилась';
+        }
+    }
+    
+    // Генерация сказки
+    async function makeStory() {
+        addMessage('📖 Придумываю сказку...');
+        
+        let heroText = hero;
+        if (hero === 'я' || hero === 'меня') {
+            heroText = childGender === 'мальчик' ? `мальчик ${childName}` : `девочка ${childName}`;
+        }
+        
+        const prompt = `Придумай короткую волшебную сказку для ребёнка 7 лет. 
+        Герой: ${heroText}. 
+        Место: ${place}. 
+        Друг: ${friend}. 
+        Волшебный предмет: ${magicItem || 'нет'}.
+        Напиши 3-4 предложения.`;
+        
+        let result = await askBot(prompt);
+        
+        if (!result || result.includes('Ошибка')) {
+            result = `Жил-был ${heroText} в ${place}. Другом был ${friend}. И началось у них волшебное приключение!`;
+        }
+        
+        storyText = result;
+        storyBlock.textContent = storyText;
+        addMessage(storyText);
+        
+        // Картинка
+        const imgPrompt = `${heroText} ${place} ${friend} сказка`;
+        await makePicture(imgPrompt);
+        
+        addMessage('✨ Что будет дальше? Придумай продолжение!');
+        showSuggestions(['нашли клад', 'встретили волшебника', 'спасли друга', 'полетели путешествовать', 'придумаю сам(а)']);
+        step = 5;
+    }
+    
+    // Начало
+    addMessage('Привет! Я Буклик 🤗');
+    addMessage('Как тебя зовут?');
+    
+    sendBtn.onclick = async () => {
+        const text = userInput.value.trim();
+        if (!text) return;
+        userInput.value = '';
+        addMessage(text, true);
+        clearSuggestions();
+        
+        // Шаг 0: Имя
+        if (step === 0) {
+            childName = text;
+            addMessage(`Приятно познакомиться, ${childName}!`);
+            addMessage('Ты мальчик или девочка?');
+            showSuggestions(['мальчик', 'девочка']);
+            step = 1;
+        }
+        // Шаг 1: Пол
+        else if (step === 1) {
+            if (text.includes('мальчик')) childGender = 'мальчик';
+            else if (text.includes('девочка')) childGender = 'девочка';
+            else childGender = 'мальчик';
+            
+            addMessage('Кто будет главным героем сказки? (Можно придумать своего)');
+            showSuggestions(['принцесса', 'дракон', 'фея', 'котёнок', 'волшебник', 'робот', 'единорог', 'свой вариант']);
+            step = 2;
+        }
+        // Шаг 2: Герой
+        else if (step === 2) {
+            hero = text;
+            addMessage('Где будет происходить действие?');
+            showSuggestions(['волшебный лес', 'старый замок', 'космос', 'остров сокровищ', 'подводное царство', 'школа магии', 'свой вариант']);
+            step = 3;
+        }
+        // Шаг 3: Место
+        else if (step === 3) {
+            place = text;
+            addMessage('Кто будет другом героя?');
+            showSuggestions(['верный пёс', 'говорящий кот', 'маленький дракон', 'мудрая сова', 'весёлый робот', 'волшебный феникс', 'свой вариант']);
+            step = 4;
+        }
+        // Шаг 4: Друг
+        else if (step === 4) {
+            friend = text;
+            addMessage('Есть ли волшебный предмет? (Напиши название или "нет")');
+            showSuggestions(['волшебная палочка', 'ковёр-самолёт', 'шапка-невидимка', 'меч-кладенец', 'живая вода', 'нет']);
+            step = 5;
+        }
+        // Шаг 5: Волшебный предмет
+        else if (step === 5) {
+            magicItem = text;
+            if (magicItem.toLowerCase() === 'нет') magicItem = '';
+            await makeStory();
+        }
+        // Шаг 6: Продолжение
+        else if (step === 6) {
+            addMessage('✨ Продолжаю...');
+            
+            const prompt = `Продолжи сказку. Герой: ${hero}. Место: ${place}. Друг: ${friend}. Ребёнок придумал: "${text}". Напиши 2-3 предложения.`;
+            let result = await askBot(prompt);
+            
+            if (!result) {
+                result = `И отправились ${hero} и ${friend} в новое приключение!`;
+            }
+            
+            storyText = result;
+            storyBlock.textContent = storyText;
+            addMessage(storyText);
+            
+            const imgPrompt = `${hero} ${place} приключение`;
+            await makePicture(imgPrompt);
+            
+            addMessage('Что дальше?');
+            showSuggestions(['продолжить сказку', 'закончить сказку']);
+            step = 7;
+        }
+        // Шаг 7: Закончить или продолжить
+        else if (step === 7) {
+            if (text.includes('продолжи')) {
+                addMessage('Что случится дальше?');
+                showSuggestions(['волшебство', 'новая встреча', 'спасение', 'путешествие']);
+                step = 6;
+            } else {
+                addMessage('🎉 Сказка закончена! Ты молодец! Приходи ещё, придумаем новую историю.');
+                addMessage('Буклик прощается с тобой! До новых встреч!');
+                step = 8;
+            }
+        }
+    };
+    
+    // Микрофон
+    if ('webkitSpeechRecognition' in window) {
+        const rec = new webkitSpeechRecognition();
+        rec.lang = 'ru-RU';
+        rec.continuous = false;
+        rec.interimResults = false;
+        rec.onresult = (e) => {
+            userInput.value = e.results[0][0].transcript;
+            sendBtn.click();
+        };
+        rec.onerror = () => addMessage('Не расслышал, попробуй ещё раз');
+        micBtn.onclick = () => rec.start();
+    } else {
+        micBtn.style.display = 'none';
+    }
+</script>
+</body>
+</html>
