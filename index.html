@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Буклик — волшебный друг</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Comic Sans MS', cursive, sans-serif; }
+        body {
+            background: linear-gradient(145deg, #7BC5AE 0%, #B8E1D9 50%, #E6C5A8 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .app {
+            max-width: 700px;
+            width: 100%;
+            background: rgba(255, 248, 235, 0.3);
+            backdrop-filter: blur(8px);
+            border-radius: 70px 70px 50px 50px;
+            padding: 30px 25px 40px;
+            box-shadow: 0 30px 50px rgba(92, 55, 20, 0.3);
+            border: 3px solid rgba(255, 250, 220, 0.9);
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.8rem;
+            color: #3F2B1C;
+            text-shadow: 4px 4px 0 #F9D77E;
+            background: #FFF5E0;
+            display: inline-block;
+            padding: 12px 35px;
+            border-radius: 90px;
+            margin-bottom: 20px;
+            border: 4px solid #FFCF9A;
+        }
+        .character-img {
+            max-width: 180px;
+            border-radius: 50px;
+            border: 5px solid #FFEAC1;
+            filter: drop-shadow(0 15px 20px rgba(110, 70, 20, 0.2));
+            margin: 10px auto 20px;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        /* Анимации */
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        .animate-happy { animation: bounce 0.5s ease 2; }
+        .animate-thinking { animation: think 1.5s ease-in-out infinite; filter: brightness(1.05) drop-shadow(0 0 8px #FFD700); }
+        .animate-sad { animation: sadShake 1s ease 2; filter: brightness(0.95); }
+        .animate-listening { animation: tilt 0.5s ease 2; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        @keyframes bounce { 0% { transform: scale(1); } 50% { transform: scale(1.1) translateY(-15px); } 100% { transform: scale(1); } }
+        @keyframes think { 0% { transform: rotate(0deg); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
+        @keyframes sadShake { 0% { transform: translateX(0px); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } 100% { transform: translateX(0px); } }
+        @keyframes tilt { 0% { transform: rotate(0deg); } 50% { transform: rotate(10deg); } 100% { transform: rotate(0deg); } }
+        
+        .mission {
+            background: rgba(255, 245, 215, 0.8);
+            border-radius: 60px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            color: #1F4E3D;
+        }
+        .story-block {
+            background: #FFF9E6;
+            border-radius: 40px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 4px solid #FFB27F;
+            font-size: 1.3rem;
+            line-height: 1.5;
+            color: #2B1404;
+            text-align: left;
+        }
+        .picture-block {
+            background: #FFD9C0;
+            border-radius: 30px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 4px dashed #FFB27F;
+            display: none;
+            text-align: center;
+        }
+        .picture-block img { max-width: 100%; border-radius: 20px; margin-top: 10px; }
+        .chat {
+            background: rgba(255, 255, 240, 0.9);
+            border-radius: 30px;
+            padding: 20px;
+            height: 280px;
+            overflow-y: auto;
+            border: 3px solid #FFCF9A;
+            margin: 20px 0;
+            text-align: left;
+            font-size: 1rem;
+        }
+        .message { margin: 10px 0; padding: 8px 12px; border-radius: 20px; }
+        .message.user { text-align: right; background: #FFE0B5; margin-left: 40px; }
+        .message.bot { text-align: left; background: #FFFFFF; margin-right: 40px; }
+        .input-area { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        input { flex: 1; padding: 15px; font-size: 1rem; border-radius: 40px; border: 3px solid #FFCF9A; outline: none; }
+        button { padding: 15px 25px; font-size: 1rem; border-radius: 40px; border: none; background: #FFB27F; cursor: pointer; font-weight: bold; box-shadow: 0 4px 0 #A65629; transition: 0.05s linear; }
+        button:active { transform: translateY(3px); box-shadow: 0 1px 0 #A65629; }
+        .mic { background: #A7D0CD; box-shadow: 0 4px 0 #6E9E9A; }
+        .listening { background: #4CAF50; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); background: #4CAF50; } 50% { transform: scale(1.05); background: #45a049; } 100% { transform: scale(1); background: #4CAF50; } }
+        .suggestions { display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0; justify-content: center; }
+        .suggestion-btn { background: #FFF0D9; border: 2px solid #FFB27F; border-radius: 40px; padding: 10px 20px; font-size: 0.9rem; cursor: pointer; transition: 0.1s; }
+        .suggestion-btn:hover { background: #FFB27F; color: white; }
+        #download-btn { background: #D9B8C4; margin: 20px auto 0; display: none; padding: 15px 30px; border-radius: 60px; border: 4px solid #FFB27F; cursor: pointer; width: fit-content; font-weight: bold; }
+        .voice-toggle { background: #FFE0B5; border-radius: 20px; padding: 8px 15px; margin-bottom: 15px; font-size: 0.8rem; display: inline-block; cursor: pointer; }
+        @media (max-width: 550px) { h1 { font-size: 2rem; } .story-block { font-size: 1.1rem; } button { padding: 12px 20px; } }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+<div class="app">
+    <div class="voice-toggle" id="voiceToggle">🔊 Включить голос Буклика</div>
+    <h1>✨ Буклик ✨</h1>
+    <div class="mission">Я помогаю придумывать волшебные истории, читать вслух и рисовать картинки!</div>
+    <img src="moy_buklik.jpg" alt="Буклик" class="character-img animate-float" id="buklikImg">
+
+    <div class="story-block" id="storyBlock">📖 Здесь появится твоя история...</div>
+    <div class="picture-block" id="pictureBlock"><div>🎨 Рисую картинку...</div><img id="pictureImg" src=""></div>
+    <div class="chat" id="chat"></div>
+    <div class="suggestions" id="suggestions"></div>
+
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Напиши или нажми микрофон">
+        <button id="sendBtn">📬 Отправить</button>
+        <button id="micBtn" class="mic">🎤 Микрофон</button>
+    </div>
+    <div id="download-btn">📥 Скачать книгу</div>
+</div>
+
+<script>
+// ==================== НАСТРОЙКИ ====================
+const OPENROUTER_API_KEY = "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";
+const API_URL = 'https://examples-beta-murex.vercel.app'; // для картинок
+
+// ==================== DOM ЭЛЕМЕНТЫ ====================
+const chatDiv = document.getElementById('chat');
+const storyBlock = document.getElementById('storyBlock');
+const pictureBlock = document.getElementById('pictureBlock');
+const pictureImg = document.getElementById('pictureImg');
+const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+const micBtn = document.getElementById('micBtn');
+const downloadBtn = document.getElementById('download-btn');
+const suggestionsDiv = document.getElementById('suggestions');
+const voiceToggle = document.getElementById('voiceToggle');
+const buklikImg = document.getElementById('buklikImg');
+
+// ==================== ПЕРЕМЕННЫЕ СОСТОЯНИЯ ====================
+let step = 0;                      // шаг диалога
+let childName = '';               // имя ребёнка
+let childGender = '';             // 'boy' или 'girl'
+let hero = '';                    // главный герой
+let place = '';                   // место действия
+let friend = '';                  // друг героя
+let fullStory = [];               // массив абзацев сказки
+let fullImagePrompts = [];        // промты для картинок к абзацам
+let fullImages = [];              // URL сгенерированных картинок
+let currentParagraph = 0;         // текущий индекс абзаца
+let expectedText = '';            // текст, который нужно прочитать
+let recognition = null;            // распознавание речи
+let voiceEnabled = false;          // включён ли голос
+let isReadingMode = false;         // режим чтения
+let isWaitingForIdea = false;      // ожидание идеи продолжения
+let maxParagraphs = 3;             // максимум абзацев (не считая финала)
+
+// ==================== АНИМАЦИИ БУКЛИКА ====================
+function setBuklikEmotion(emotion) {
+    buklikImg.classList.remove('animate-happy', 'animate-thinking', 'animate-sad', 'animate-listening');
+    buklikImg.classList.add('animate-float');
+    switch(emotion) {
+        case 'happy':
+            buklikImg.classList.add('animate-happy');
+            setTimeout(() => buklikImg.classList.add('animate-float'), 600);
+            break;
+        case 'thinking':
+            buklikImg.classList.add('animate-thinking');
+            break;
+        case 'sad':
+            buklikImg.classList.add('animate-sad');
+            setTimeout(() => buklikImg.classList.add('animate-float'), 800);
+            break;
+        case 'listening':
+            buklikImg.classList.add('animate-listening');
+            setTimeout(() => buklikImg.classList.add('animate-float'), 500);
+            break;
+        default:
+            buklikImg.classList.add('animate-float');
+    }
+}
+
+// ==================== ГОЛОС ====================
+let speechSynth = window.speechSynthesis;
+let voices = [];
+
+function loadVoices() {
+    voices = speechSynth.getVoices();
+}
+loadVoices();
+if (speechSynth.onvoiceschanged !== undefined) {
+    speechSynth.onvoiceschanged = loadVoices;
+}
+
+function speakText(text) {
+    if (!voiceEnabled || !text) return;
+    speechSynth.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ru-RU';
+    utterance.rate = 0.9;
+    utterance.pitch = 1.2;
+    const ruVoice = voices.find(v => v.lang === 'ru-RU' && (v.name.includes('Google') || v.name.includes('Microsoft')));
+    if (ruVoice) utterance.voice = ruVoice;
+    speechSynth.speak(utterance);
+}
+
+function enableVoice() {
+    if (!voiceEnabled) {
+        voiceEnabled = true;
+        voiceToggle.textContent = '🔊 Голос Буклика включён';
+        voiceToggle.style.background = '#4CAF50';
+        voiceToggle.style.color = 'white';
+        setTimeout(() => {
+            setBuklikEmotion('happy');
+            speakText('Привет! Я Буклик, рад тебя слышать!');
+        }, 500);
+    }
+}
+voiceToggle.onclick = enableVoice;
+
+// ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+function addMessage(text, isUser = false) {
+    const msg = document.createElement('div');
+    msg.className = `message ${isUser ? 'user' : 'bot'}`;
+    msg.innerHTML = `<strong>${isUser ? 'Ты' : 'Буклик'}:</strong> ${text}`;
+    chatDiv.appendChild(msg);
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+    if (!isUser && voiceEnabled) {
+        speakText(text);
+    }
+}
+
+function showSuggestions(options) {
+    suggestionsDiv.innerHTML = '';
+    const customBtn = document.createElement('span');
+    customBtn.className = 'suggestion-btn';
+    customBtn.textContent = '✏️ Придумать свой вариант';
+    customBtn.onclick = () => {
+        userInput.placeholder = 'Напиши, что будет дальше...';
+        userInput.focus();
+        setBuklikEmotion('thinking');
+    };
+    suggestionsDiv.appendChild(customBtn);
+    options.forEach(opt => {
+        const btn = document.createElement('span');
+        btn.className = 'suggestion-btn';
+        btn.textContent = opt;
+        btn.onclick = () => {
+            userInput.value = opt;
+            sendBtn.click();
+        };
+        suggestionsDiv.appendChild(btn);
+    });
+}
+
+function clearSuggestions() { suggestionsDiv.innerHTML = ''; }
+
+// Списки имён для определения пола
+const maleNames = ['александр', 'алексей', 'андрей', 'антон', 'артём', 'борис', 'вадим', 'валентин', 'валерий', 'василий', 'виктор', 'владимир', 'владислав', 'вячеслав', 'геннадий', 'георгий', 'герман', 'глеб', 'григорий', 'даниил', 'денис', 'дмитрий', 'евгений', 'егор', 'иван', 'игорь', 'илья', 'кирилл', 'константин', 'лев', 'леонид', 'максим', 'марк', 'матвей', 'михаил', 'никита', 'николай', 'олег', 'павел', 'пётр', 'платон', 'родион', 'роман', 'руслан', 'савва', 'святослав', 'семён', 'сергей', 'станислав', 'степан', 'тимофей', 'тимур', 'фёдор', 'филипп', 'юрий', 'яков', 'ярослав'];
+const femaleNames = ['александра', 'алина', 'алиса', 'алла', 'анастасия', 'ангелина', 'анна', 'антонина', 'валентина', 'валерия', 'варвара', 'вера', 'вероника', 'виктория', 'галина', 'дарина', 'дарья', 'диана', 'ева', 'евгения', 'екатерина', 'елена', 'елизавета', 'жанна', 'зинаида', 'зоя', 'инна', 'ирина', 'карина', 'кира', 'клавдия', 'ксения', 'лада', 'лариса', 'лидия', 'лилия', 'любовь', 'людмила', 'майя', 'маргарита', 'марина', 'мария', 'милена', 'надежда', 'настасья', 'наталья', 'нелли', 'нина', 'оксана', 'оливия', 'ольга', 'полина', 'раиса', 'рита', 'светлана', 'софия', 'софья', 'таисия', 'тамара', 'татьяна', 'ульяна', 'юлия'];
+
+function detectGender(name) {
+    const lowerName = name.toLowerCase();
+    if (maleNames.includes(lowerName)) return 'boy';
+    if (femaleNames.includes(lowerName)) return 'girl';
+    return null;
+}
+
+// ==================== ЗАПРОСЫ К OPENROUTER ====================
+async function askOpenRouter(prompt, isFirstParagraph = false) {
+    try {
+        let systemPrompt = `Ты детский писатель. Ты пишешь ВОЛШЕБНЫЕ СКАЗКИ для детей 7 лет.
+        ВАЖНО: Согласуй все слова по падежам и роду! Если герой женского рода — используй окончания "а", "я", "ла", "ла". Если герой мужского рода — окончания "л", "ел", "ыл".
+        Не используй звёздочки, markdown, кавычки-ёлочки.
+        Пиши ярко, образно, интересно для ребёнка.`;
+        
+        if (isFirstParagraph) {
+            systemPrompt += `\n\nВАЖНО: НЕ НАЧИНАЙ СКАЗКУ СО СЛОВ "Жил-был" или "Жила-была". Придумай разные, интересные начала: "В далёкой стране...", "Однажды утром...", "В волшебном лесу...", "За семью горами...", "В одном удивительном королевстве...".`;
+        }
+        
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: "qwen/qwen-3.6-plus-preview:free",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: prompt }
+                ],
+                temperature: 0.85,
+                max_tokens: 500
+            })
+        });
+        const data = await response.json();
+        if (data.choices && data.choices[0]) {
+            return data.choices[0].message.content.trim();
+        }
+        return null;
+    } catch(e) {
+        console.error('OpenRouter error:', e);
+        return null;
+    }
+}
+
+// ==================== ГЕНЕРАЦИЯ ТЕКСТА ====================
+async function generateFirstParagraph() {
+    setBuklikEmotion('thinking');
+    addMessage('✨ Сейчас придумаю начало сказки...');
+    
+    const heroText = hero;
+    const genderHint = (hero.includes('фея') || hero.includes('принцесса') || hero.includes('девочка')) 
+        ? ' (герой женского рода, используй "она", "её", окончания "а", "я")' 
+        : ' (герой мужского рода, используй "он", "его", окончания "л", "ел")';
+    
+    const prompt = `Напиши первый абзац волшебной сказки для ребёнка 7 лет.
+        Герой: ${heroText}${genderHint}
+        Место: ${place}. 
+        Друг: ${friend}. 
+        Напиши 3-4 предложения.
+        НЕ НАЧИНАЙ СО СЛОВ "Жил-был" или "Жила-была". Придумай интересное начало.
+        ВАЖНО: Согласуй все слова по падежам правильно.`;
+    
+    const paragraph = await askOpenRouter(prompt, true);
+    
+    if (paragraph && paragraph.length > 20) {
+        fullStory.push(paragraph);
+        fullImagePrompts.push(`${heroText} и ${friend} в ${place}, волшебная сказка, детская иллюстрация`);
+        storyBlock.textContent = paragraph;
+        addMessage(paragraph);
+        setBuklikEmotion('happy');
+        return true;
+    } else {
+        const fallback = (hero.includes('фея') || hero.includes('принцесса') || hero.includes('девочка'))
+            ? `В волшебном ${place} жила-была ${heroText}. Однажды она встретила ${friend}. Это была удивительная встреча!`
+            : `В далёком ${place} жил-был ${heroText}. Однажды он встретил ${friend}. Начались настоящие чудеса!`;
+        fullStory.push(fallback);
+        fullImagePrompts.push(`${heroText} и ${friend} в ${place}`);
+        storyBlock.textContent = fallback;
+        addMessage(fallback);
+        return true;
+    }
+}
+
+async function generateNextParagraph(userIdea) {
+    setBuklikEmotion('thinking');
+    addMessage('✨ Сейчас придумаю продолжение...');
+    
+    const heroText = hero;
+    const prompt = `Продолжи сказку про ${heroText} и ${friend}. 
+        Ребёнок придумал такое продолжение: "${userIdea}". 
+        Напиши следующий абзац (3-4 предложения). Развивай сюжет.
+        Согласуй все слова по падежам. Не используй звёздочки.`;
+    
+    const paragraph = await askOpenRouter(prompt, false);
+    
+    if (paragraph && paragraph.length > 20) {
+        fullStory.push(paragraph);
+        fullImagePrompts.push(`${heroText} и ${friend} ${userIdea}, сказочная иллюстрация`);
+        storyBlock.textContent = paragraph;
+        addMessage(paragraph);
+        setBuklikEmotion('happy');
+        return true;
+    } else {
+        const fallback = `И отправились ${heroText} и ${friend} дальше, навстречу новым чудесам!`;
+        fullStory.push(fallback);
+        fullImagePrompts.push(`${heroText} и ${friend} в путешествии`);
+        storyBlock.textContent = fallback;
+        addMessage(fallback);
+        return true;
+    }
+}
+
+async function generateFinalParagraph() {
+    setBuklikEmotion('thinking');
+    addMessage('✨ Придумываю красивый финал...');
+    
+    const heroText = hero;
+    const prompt = `Напиши счастливый конец сказки про ${heroText} и ${friend}. 
+        Они возвращаются домой, всё хорошо. 3-4 предложения, тепло, волшебно.
+        Закончи словами "И жили они долго и счастливо".
+        ВАЖНО: Согласуй слова по падежам правильно.`;
+    
+    const paragraph = await askOpenRouter(prompt, false);
+    
+    if (paragraph && paragraph.length > 20) {
+        fullStory.push(paragraph);
+        fullImagePrompts.push(`${heroText} и ${friend} счастливый финал, все радуются`);
+        storyBlock.textContent = paragraph;
+        addMessage(paragraph);
+        setBuklikEmotion('happy');
+        return true;
+    } else {
+        const fallback = `И вернулись ${heroText} и ${friend} домой. Все были счастливы. И жили они долго и счастливо!`;
+        fullStory.push(fallback);
+        fullImagePrompts.push(`${heroText} и ${friend} дома, радость`);
+        storyBlock.textContent = fallback;
+        addMessage(fallback);
+        return true;
+    }
+}
+
+// ==================== КАРТИНКИ ====================
+async function generatePicture(prompt, index) {
+    pictureBlock.style.display = 'block';
+    if (index === currentParagraph - 1) {
+        pictureImg.src = '';
+        const imgDiv = pictureBlock.querySelector('div');
+        if (imgDiv) imgDiv.textContent = '🎨 Рисую картинку...';
+        try {
+            const encodedPrompt = encodeURIComponent(prompt.slice(0, 150));
+            const response = await fetch(`${API_URL}/generate-image?prompt=${encodedPrompt}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                pictureImg.src = url;
+                fullImages[index] = url;
+                if (imgDiv) imgDiv.textContent = '✨ Вот картинка к твоей истории!';
+                setBuklikEmotion('happy');
+            } else throw new Error('Ошибка');
+        } catch (error) {
+            console.error('Ошибка картинки:', error);
+            if (imgDiv) imgDiv.textContent = '😔 Картинка не загрузилась, но ты молодец!';
+        }
+    }
+}
+
+// ==================== ПРОВЕРКА ЧТЕНИЯ ====================
+function startListening() {
+    if (!recognition) {
+        if (!('webkitSpeechRecognition' in window)) {
+            addMessage('Твой браузер не поддерживает микрофон. Попробуй Chrome!');
+            return;
+        }
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = 'ru-RU';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+    }
+    micBtn.classList.add('listening');
+    micBtn.textContent = '🎤 Слушаю...';
+    setBuklikEmotion('listening');
+    addMessage('🎙️ Слушаю тебя! Прочитай этот абзац вслух.');
+    
+    recognition.onresult = (event) => {
+        const spokenText = event.results[0][0].transcript;
+        micBtn.classList.remove('listening');
+        micBtn.textContent = '🎤 Микрофон';
+        addMessage(spokenText, true);
+        recognition.stop();
+        checkReading(spokenText);
+    };
+    
+    recognition.onerror = () => {
+        micBtn.classList.remove('listening');
+        micBtn.textContent = '🎤 Микрофон';
+        setBuklikEmotion('sad');
+        addMessage('😊 Не расслышал. Попробуй ещё раз, нажми на микрофон и читай громче!');
+        recognition.stop();
+    };
+    
+    recognition.start();
+}
+
+function checkReading(spokenText) {
+    const cleanExpected = expectedText.toLowerCase().replace(/[^\w\s]/g, '');
+    const cleanSpoken = spokenText.toLowerCase().replace(/[^\w\s]/g, '');
+    let matches = 0;
+    const expectedWords = cleanExpected.split(/\s+/);
+    const spokenWords = cleanSpoken.split(/\s+/);
+    for (let word of spokenWords) {
+        if (expectedWords.some(w => w.includes(word) || word.includes(w))) matches++;
+    }
+    const matchPercent = matches / expectedWords.length;
+    
+    if (matchPercent > 0.3 || cleanSpoken.length > cleanExpected.length * 0.3) {
+        setBuklikEmotion('happy');
+        addMessage('🎉 Отлично! Ты замечательно прочитал(а)! Молодец!');
+        generatePicture(fullImagePrompts[currentParagraph - 1], currentParagraph - 1);
+        
+        // Проверяем, закончена ли сказка
+        if (currentParagraph >= fullStory.length) {
+            addMessage('📚 Ура! Ты прочитал(а) всю сказку! Теперь можешь скачать книгу со всеми картинками.');
+            downloadBtn.style.display = 'block';
+            step = 99;
+            isReadingMode = false;
+        } else {
+            addMessage('✨ Что будет дальше в сказке? Придумай свой вариант или выбери.');
+            showSuggestions([
+                'нашли волшебный клад', 
+                'встретили доброго волшебника', 
+                'спасли друга из беды', 
+                'полетели на ковре-самолёте', 
+                'попали в заколдованный лес'
+            ]);
+            isWaitingForIdea = true;
+            step = 6;
+        }
+    } else {
+        setBuklikEmotion('sad');
+        addMessage('😊 Почти получилось! Давай попробуем ещё раз. Нажми на микрофон и прочитай внимательно.');
+    }
+}
+
+// ==================== ОСНОВНАЯ ЛОГИКА ====================
+addMessage('Привет! Я Буклик 🤗');
+addMessage('Как тебя зовут?');
+
+sendBtn.onclick = async () => {
+    const text = userInput.value.trim();
+    if (!text) return;
+    userInput.value = '';
+    userInput.placeholder = 'Напиши или нажми микрофон';
+    addMessage(text, true);
+    clearSuggestions();
+    
+    if (isReadingMode && step !== 6) return;
+    
+    try {
+        // Шаг 0: Имя
+        if (step === 0) {
+            childName = text;
+            const detected = detectGender(childName);
+            if (detected) {
+                childGender = detected;
+                addMessage(`Приятно познакомиться, ${childName}!`);
+                addMessage('Кто будет главным героем сказки? (Можешь придумать своего)');
+                showSuggestions(['фея', 'дракон', 'принцесса', 'котёнок', 'волшебник', 'единорог', 'робот']);
+                step = 2;
+            } else {
+                addMessage(`Приятно познакомиться, ${childName}! Ты мальчик или девочка?`);
+                showSuggestions(['мальчик', 'девочка']);
+                step = 1;
+            }
+        }
+        // Шаг 1: Пол (если имя не в списке)
+        else if (step === 1) {
+            childGender = text.includes('мальчик') ? 'boy' : 'girl';
+            addMessage('Кто будет главным героем сказки? (Можешь придумать своего)');
+            showSuggestions(['фея', 'дракон', 'принцесса', 'котёнок', 'волшебник', 'единорог', 'робот']);
+            step = 2;
+        }
+        // Шаг 2: Герой
+        else if (step === 2) {
+            const lower = text.toLowerCase().trim();
+            if (lower === 'я' || lower === 'я сама' || lower === 'я сам') {
+                hero = childGender === 'boy' ? `мальчик ${childName}` : `девочка ${childName}`;
+            } else {
+                hero = text;
+            }
+            addMessage('Где происходит действие? (Можешь придумать своё место)');
+            showSuggestions(['волшебный лес', 'старый замок', 'космос', 'остров сокровищ', 'подводное царство', 'облачный город']);
+            step = 3;
+        }
+        // Шаг 3: Место
+        else if (step === 3) {
+            place = text;
+            addMessage('Кто друг героя? (Можешь придумать своего друга)');
+            showSuggestions(['верный пёс', 'говорящий кот', 'маленький дракон', 'мудрая сова', 'весёлый робот', 'волшебная фея']);
+            step = 4;
+        }
+        // Шаг 4: Друг
+        else if (step === 4) {
+            friend = text;
+            await generateFirstParagraph();
+            expectedText = fullStory[0];
+            currentParagraph = 1;
+            addMessage('🎤 Прочитай этот абзац вслух! Нажми на синюю кнопку с микрофоном.');
+            isReadingMode = true;
+            step = 5;
+        }
+        // Шаг 5: Режим чтения (ожидание)
+        else if (step === 5) {
+            addMessage('Нажми на кнопку с микрофоном 🎤 и прочитай текст вслух!');
+        }
+        // Шаг 6: Получение идеи продолжения
+        else if (step === 6 && isWaitingForIdea) {
+            isWaitingForIdea = false;
+            if (fullStory.length >= maxParagraphs) {
+                await generateFinalParagraph();
+                expectedText = fullStory[fullStory.length - 1];
+                currentParagraph = fullStory.length;
+                addMessage('🎤 Прочитай финал вслух!');
+                step = 5;
+            } else {
+                await generateNextParagraph(text);
+                expectedText = fullStory[fullStory.length - 1];
+                currentParagraph = fullStory.length;
+                addMessage('🎤 Прочитай этот абзац вслух!');
+                step = 5;
+            }
+        }
+        // Шаг 99: Книга готова
+        else if (step === 99) {
+            if (text.includes('да') || text.includes('хочу') || text.includes('скачать')) {
+                addMessage('Отлично! Нажми на кнопку "Скачать книгу" внизу.');
+            } else
